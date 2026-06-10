@@ -119,8 +119,12 @@ ollama pull qwen2.5:14b        # 16 GB RAM; daha azı için: qwen2.5:7b
 İlk çalıştırmada sentiment modelleri (~900 MB: FinBERT + Türkçe BERT) otomatik iner.
 
 ```bash
-.venv/bin/streamlit run app.py          # dashboard → http://localhost:8501
+./calistir.sh           # her seyi baslatir: dashboard + bildirici + ollama
+./calistir.sh durum     # ne calisiyor?
+./calistir.sh durdur    # hepsini durdur
 ```
+
+Veya elle: `.venv/bin/streamlit run app.py` → http://localhost:8501
 
 ### Telegram botu (opsiyonel)
 
