@@ -45,17 +45,19 @@ def load_secrets() -> dict | None:
     return None
 
 
-def send_telegram(secrets: dict, text: str) -> bool:
+def send_telegram(secrets: dict, text: str, chat_id: str | int | None = None) -> bool:
+    """Mesaj yollar; chat_id verilmezse bot sahibine gider."""
+    target = chat_id if chat_id is not None else secrets["chat_id"]
     try:
         resp = requests.post(
             f"https://api.telegram.org/bot{secrets['telegram_token']}/sendMessage",
-            json={"chat_id": secrets["chat_id"], "text": text, "parse_mode": "Markdown"},
+            json={"chat_id": target, "text": text, "parse_mode": "Markdown"},
             timeout=15,
         )
         if not resp.ok:  # Markdown parse hatasi olabilir — duz metin dene
             resp = requests.post(
                 f"https://api.telegram.org/bot{secrets['telegram_token']}/sendMessage",
-                json={"chat_id": secrets["chat_id"], "text": text},
+                json={"chat_id": target, "text": text},
                 timeout=15,
             )
         return resp.ok
@@ -162,27 +164,32 @@ def main() -> None:
 
     while True:
         # 1) Telegram mesajlari (long-poll 20 sn — dongunun bekleme noktasi)
+        # Herkes soru sorabilir; alarm gibi durum degistiren komutlar ve
+        # sinyal bildirimleri/sabah raporu yalnizca bot sahibine ozeldir.
         for update in get_updates(secrets, offset):
             offset = update["update_id"] + 1
             msg = update.get("message", {})
-            if str(msg.get("chat", {}).get("id")) != str(secrets["chat_id"]):
-                continue  # yalniz bot sahibi
+            chat_id = msg.get("chat", {}).get("id")
             text = msg.get("text", "")
-            if not text:
+            if chat_id is None or not text:
                 continue
-            print(f"[{datetime.now():%H:%M}] mesaj: {text[:60]}")
+            is_owner = str(chat_id) == str(secrets["chat_id"])
+            who = "sahip" if is_owner else f"misafir:{chat_id}"
+            print(f"[{datetime.now():%H:%M}] mesaj ({who}): {text[:60]}")
             if not text.startswith("/"):
-                send_telegram(secrets, "🤔 Bakiyorum, birkac saniye...")
+                send_telegram(secrets, "🤔 Bakiyorum, birkac saniye...", chat_id)
             try:
-                reply = assistant.handle_text(text, {
-                    s: a for s, a in previous.items() if not s.startswith("_")
-                })
+                reply = assistant.handle_text(
+                    text,
+                    {s: a for s, a in previous.items() if not s.startswith("_")},
+                    chat_id=str(chat_id), is_owner=is_owner,
+                )
             except Exception as exc:
                 reply = f"Hata olustu: {exc}"
-            send_telegram(secrets, reply)
-            # Sohbet hafizasi: takip sorulari ("peki ya ethereum?") baglam bulsun
-            assistant.remember("user", text)
-            assistant.remember("assistant", reply)
+            send_telegram(secrets, reply, chat_id)
+            # Sohbet hafizasi: kullanici basina — takip sorulari baglam bulsun
+            assistant.remember(str(chat_id), "user", text)
+            assistant.remember(str(chat_id), "assistant", reply)
 
         # 2) Fiyat alarmlari (~60 sn'de bir, yalniz alarmli varliklar)
         now_ts = time.time()

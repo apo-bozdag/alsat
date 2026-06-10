@@ -106,7 +106,7 @@ kâğıt üzerinde işler** — backtest'in canlı doğrulaması birikir.
 Gereksinimler: Python 3.12+ · macOS/Linux · ~4 GB disk (AI modelleri) · 16 GB RAM önerilir
 
 ```bash
-git clone <repo-url> && cd alsat
+git clone https://github.com/apo-bozdag/alsat.git && cd alsat
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
