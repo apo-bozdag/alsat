@@ -1,0 +1,12 @@
+*.pyc
+.alarms.json
+.chat_history.json
+.idea/
+.journal.json
+.notifier_state.json
+.portfolio.json
+.scorecard.json
+.secrets.json
+.venv/
+__pycache__/
+notifier.log
