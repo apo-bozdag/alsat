@@ -186,7 +186,8 @@ def main() -> None:
                 )
             except Exception as exc:
                 reply = f"Hata olustu: {exc}"
-            send_telegram(secrets, reply, chat_id)
+            sent = send_telegram(secrets, reply, chat_id)
+            print(f"[{datetime.now():%H:%M}] cevap ({who}): {'gonderildi' if sent else 'GONDERILEMEDI'}")
             # Sohbet hafizasi: kullanici basina — takip sorulari baglam bulsun
             assistant.remember(str(chat_id), "user", text)
             assistant.remember(str(chat_id), "assistant", reply)

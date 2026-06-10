@@ -129,7 +129,8 @@ def handle_text(text: str, current_actions: dict[str, str],
     kullanabilir; alarm kurma/silme gibi durum degistiren komutlar sahibe ozeldir.
     """
     text = text.strip()
-    low = text.lower()
+    # Turkce klavye komutlari da taninsin: /yardım -> /yardim, /takvım vs.
+    low = text.lower().translate(str.maketrans("ıİşğüöç", "iisguoc"))
 
     # Selamlasma/sohbet: LLM'e gitmeden dogal hazir cevap (hizli ve tutarli)
     canned = _SMALLTALK.get(low.rstrip("!?. "))
